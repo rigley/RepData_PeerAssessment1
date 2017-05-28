@@ -24,37 +24,41 @@ filtered_dat <- dat %>%
 ## 2. Steps per day
 ```{r echo = TRUE}
 total_steps <- filtered_dat %>% summarize(steps = sum(steps))
-
-print(paste("Total steps: ", total_steps))
-```
-
-```{r echo= TRUE}
 hist(x = filtered_dat$steps,
      breaks = 50, 
-     main = "Histogram of steps taken",
+     main = "Histogram of total steps taken per day",
      xlab = "Steps")
 ```
+
 ## 3. Mean and Median of steps per day
+
 ```{r echo = TRUE}
 mean_steps <- mean(filtered_dat$steps)
 median_steps <- median(filtered_dat$steps)
-print(paste("Mean of daily steps: ", format(mean_steps, nsmall=2)))
-print(paste("Median of daily steps: ", median_steps))
 ```
+  
+The mean of daily steps is: `r format(mean_steps, nsmall=2, big.mark = ",")`  
+The median of daily steps is: `r format(median_steps, big.mark = ",")`  
 
-## 4. Average daily pattern
+
+## 4. Average daily pattern for time series plot
 ``` {r echo = TRUE}
 steps_by_interval <- dat %>%
      filter(is.na(steps) == FALSE) %>%
      group_by(interval) %>%
      summarize(avg_steps = mean(steps), tot_steps = sum(steps), cnt = n())
 
-plot(x = steps_by_interval$interval, y = steps_by_interval$avg_steps, type = "l")
+plot(x = steps_by_interval$interval, 
+     y = steps_by_interval$avg_steps, type = "l",
+     xlab = "5 minute time interval",
+     ylab = "Average steps",
+     main = "Average steps taken at given time interval")
 ```
 
+##5. 5 minute interval with maximum number of steps
 ``` {r echo = TRUE}
-
+data_row <- steps_by_interval %>% filter(avg_steps == max(avg_steps)) 
 ```
+  
+  The 5 minute interval on average across all days in the set that contains the maximum number of steps is: `r data_row$interval`
 
-
-## 5. 
