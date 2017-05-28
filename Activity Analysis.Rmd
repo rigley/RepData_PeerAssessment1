@@ -1,0 +1,60 @@
+---
+title: "Personal Movement"
+output: html_document
+author: Chris Grafer
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+```
+
+## 1. Loading and Preprocessing
+```{r echo = TRUE}
+dat <- read.csv("./activity.csv")
+
+filtered_dat <- dat %>% 
+     filter(is.na(steps) == FALSE) %>% 
+     group_by(date) %>% 
+     summarize(steps = sum(steps))
+```
+
+
+
+## 2. Steps per day
+```{r echo = TRUE}
+total_steps <- filtered_dat %>% summarize(steps = sum(steps))
+
+print(paste("Total steps: ", total_steps))
+```
+
+```{r echo= TRUE}
+hist(x = filtered_dat$steps,
+     breaks = 50, 
+     main = "Histogram of steps taken",
+     xlab = "Steps")
+```
+## 3. Mean and Median of steps per day
+```{r echo = TRUE}
+mean_steps <- mean(filtered_dat$steps)
+median_steps <- median(filtered_dat$steps)
+print(paste("Mean of daily steps: ", format(mean_steps, nsmall=2)))
+print(paste("Median of daily steps: ", median_steps))
+```
+
+## 4. Average daily pattern
+``` {r echo = TRUE}
+steps_by_interval <- dat %>%
+     filter(is.na(steps) == FALSE) %>%
+     group_by(interval) %>%
+     summarize(avg_steps = mean(steps), tot_steps = sum(steps), cnt = n())
+
+plot(x = steps_by_interval$interval, y = steps_by_interval$avg_steps, type = "l")
+```
+
+``` {r echo = TRUE}
+
+```
+
+
+## 5. 
