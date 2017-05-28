@@ -7,6 +7,7 @@ author: Chris Grafer
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
+library(ggplot2)
 ```
 
 ## 1. Loading and Preprocessing
@@ -62,3 +63,66 @@ data_row <- steps_by_interval %>% filter(avg_steps == max(avg_steps))
   
   The 5 minute interval on average across all days in the set that contains the maximum number of steps is: `r data_row$interval`
 
+##6. Code to describe and impute missing data  
+``` {r echo = TRUE}
+missing_data = count(filter(dat, is.na(dat$steps) == TRUE))
+```
+  
+  There are `r format(missing_data, big.mark = ",")` missing data items. To impute the values of the missing data, we will use the mean of the 5 minute interval.
+``` {r echo = TRUE}
+#Replace missing data with mean of that time interval
+#Separate missing data from complete data
+imputed_dat <- dat %>% filter(is.na(steps) == FALSE)
+missing_dat <- dat %>% filter(is.na(steps) == TRUE)
+
+#Set missing data equal to mean of that interval
+missing_dat <- full_join(missing_dat, steps_by_interval, by = "interval") %>%
+               transmute(steps = avg_steps, 
+                         date = date,
+                         interval = interval)
+
+#Recombine missing data with good data
+imputed_dat <- rbind(imputed_dat, missing_dat)
+```
+##7. Histogram of total number of steps with missing data imputed  
+
+```{r echo = TRUE}
+imputed_steps_per_day <- imputed_dat %>%
+     group_by(date) %>%
+     summarize(steps = sum(steps))
+
+imputed_mean = mean(imputed_steps_per_day$steps)
+imputed_median = median(imputed_steps_per_day$steps)
+     
+hist(x = imputed_steps_per_day$steps,
+     breaks = 50, 
+     main = "Histogram of total steps taken per day (imputed)",
+     xlab = "Steps")
+```
+  
+  The mean of steps per day using imputed data is `r format(imputed_mean, nsmall = 2, big.mark = ",")`  
+  The median of steps per day using imputed data is `r format(imputed_median, nsmall = 2, big.mark = ",")`  
+  The mean and median are basically the same as without the imputed data. Imputing the data had no impact on the mean or median, since we were replacing missing data with the mean of the particular interval.
+  
+##8. Panel plot of average number of steps comparing weekday and weekend
+```{r echo = TRUE}
+#Using imputed data
+weekends <- c("Saturday", "Sunday")
+imputed_dat$weekday <- factor(weekdays(as.Date(imputed_dat$date)) %in% weekends, 
+                       labels = c('weekend', 'weekday'), 
+                       levels=c(TRUE, FALSE))
+
+
+steps_by_interval_wk <- imputed_dat %>%
+     group_by(interval, weekday) %>%
+     summarize(tot_steps = sum(steps), cnt = n())
+
+head(steps_by_interval_wk)
+
+g <- ggplot(steps_by_interval_wk, aes(interval, tot_steps)) + 
+     geom_line() + 
+     facet_grid(weekday ~ .) + 
+     xlab("5 Minute Interval") + 
+     ylab("Steps")
+print(g)
+```
